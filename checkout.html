@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - E-Commerce Store</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="/">E-Commerce Store</a>
+                </div>
+                <nav class="nav">
+                    <a href="/">Home</a>
+                    <a href="/cart" id="cartLink">Cart (<span id="cartCount">0</span>)</a>
+                    <div class="user-menu">
+                        <span id="userName" style="display: none;"></span>
+                        <a href="/login" id="loginLink">Login</a>
+                        <a href="/register" id="registerLink">Register</a>
+                        <a href="#" id="logoutLink" style="display: none;" onclick="auth.logout()">Logout</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <h1>Checkout</h1>
+            <div class="checkout-wrapper">
+                <div class="checkout-form-section">
+                    <h2>Shipping Information</h2>
+                    <form id="checkoutForm" onsubmit="handleCheckout(event)">
+                        <div class="form-group">
+                            <label for="shippingAddress">Address:</label>
+                            <input type="text" id="shippingAddress" name="shippingAddress" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="shippingCity">City:</label>
+                            <input type="text" id="shippingCity" name="shippingCity" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="shippingState">State:</label>
+                            <input type="text" id="shippingState" name="shippingState" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="shippingZip">Zip Code:</label>
+                            <input type="text" id="shippingZip" name="shippingZip" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Place Order</button>
+                        <div id="errorMessage" class="error-message"></div>
+                    </form>
+                </div>
+                <div class="order-summary-section">
+                    <h2>Order Summary</h2>
+                    <div id="orderSummary">
+                        <!-- Order summary will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 E-Commerce Store. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/cart.js"></script>
+    <script>
+        let cartItems = [];
+        let productsData = {};
+
+        async function loadOrderSummary() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            // Get cart from localStorage
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            if (cart.length === 0) {
+                document.getElementById('orderSummary').innerHTML = '<p>Your cart is empty.</p>';
+                return;
+            }
+
+            cartItems = cart;
+            
+            // Load product details
+            for (const item of cart) {
+                try {
+                    const product = await api.get(`/api/products/${item.productId}`);
+                    productsData[item.productId] = product;
+                } catch (error) {
+                    console.error('Error loading product:', error);
+                }
+            }
+
+            displayOrderSummary();
+        }
+
+        function displayOrderSummary() {
+            const orderSummary = document.getElementById('orderSummary');
+            let total = 0;
+            let html = '<div class="order-items">';
+
+            cartItems.forEach(item => {
+                const product = productsData[item.productId];
+                if (product) {
+                    const itemTotal = product.price * item.quantity;
+                    total += itemTotal;
+                    html += `
+                        <div class="order-item">
+                            <img src="${product.image}" alt="${product.name}" class="order-item-image">
+                            <div class="order-item-details">
+                                <h4>${product.name}</h4>
+                                <p>Quantity: ${item.quantity}</p>
+                                <p>Price: $${product.price.toFixed(2)}</p>
+                            </div>
+                            <div class="order-item-total">$${itemTotal.toFixed(2)}</div>
+                        </div>
+                    `;
+                }
+            });
+
+            html += '</div>';
+            html += `<div class="order-total"><h3>Total: $${total.toFixed(2)}</h3></div>`;
+            orderSummary.innerHTML = html;
+        }
+
+        async function handleCheckout(event) {
+            event.preventDefault();
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const shippingAddress = document.getElementById('shippingAddress').value;
+            const shippingCity = document.getElementById('shippingCity').value;
+            const shippingState = document.getElementById('shippingState').value;
+            const shippingZip = document.getElementById('shippingZip').value;
+
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            if (cart.length === 0) {
+                document.getElementById('errorMessage').textContent = 'Your cart is empty.';
+                return;
+            }
+
+            const items = cart.map(item => ({
+                productId: item.productId,
+                quantity: item.quantity
+            }));
+
+            try {
+                const order = await api.post('/api/orders', {
+                    items,
+                    shippingAddress,
+                    shippingCity,
+                    shippingState,
+                    shippingZip
+                }, token);
+
+                // Clear cart
+                localStorage.removeItem('cart');
+                
+                // Redirect to success page or show confirmation
+                alert(`Order placed successfully! Order ID: ${order.orderId}`);
+                window.location.href = '/';
+            } catch (error) {
+                document.getElementById('errorMessage').textContent = error.message || 'Failed to place order.';
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            auth.checkAuth();
+            cart.updateCartCount();
+            loadOrderSummary();
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - E-Commerce Store</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="/">E-Commerce Store</a>
+                </div>
+                <nav class="nav">
+                    <a href="/">Home</a>
+                    <a href="/cart" id="cartLink">Cart (<span id="cartCount">0</span>)</a>
+                    <div class="user-menu">
+                        <span id="userName" style="display: none;"></span>
+                        <a href="/login" id="loginLink">Login</a>
+                        <a href="/register" id="registerLink">Register</a>
+                        <a href="#" id="logoutLink" style="display: none;" onclick="auth.logout()">Logout</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <div class="auth-container">
+                <h1>Register</h1>
+                <form id="registerForm" onsubmit="auth.handleRegister(event)">
+                    <div class="form-group">
+                        <label for="name">Name:</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Register</button>
+                    <p class="auth-link">
+                        Already have an account? <a href="/login">Login here</a>
+                    </p>
+                    <div id="errorMessage" class="error-message"></div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 E-Commerce Store. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/cart.js"></script>
+    <script>
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            auth.checkAuth();
+            cart.updateCartCount();
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - E-Commerce Store</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="/">E-Commerce Store</a>
+                </div>
+                <nav class="nav">
+                    <a href="/">Home</a>
+                    <a href="/cart" id="cartLink">Cart (<span id="cartCount">0</span>)</a>
+                    <div class="user-menu">
+                        <span id="userName" style="display: none;"></span>
+                        <a href="/login" id="loginLink">Login</a>
+                        <a href="/register" id="registerLink">Register</a>
+                        <a href="#" id="logoutLink" style="display: none;" onclick="auth.logout()">Logout</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <h1>Shopping Cart</h1>
+            <div id="cartItems" class="cart-items">
+                <!-- Cart items will be loaded here -->
+            </div>
+            <div class="cart-summary">
+                <div class="cart-total">
+                    <h3>Total: $<span id="cartTotal">0.00</span></h3>
+                </div>
+                <button class="btn btn-primary" onclick="goToCheckout()" id="checkoutBtn">Proceed to Checkout</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 E-Commerce Store. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/cart.js"></script>
+    <script>
+        function goToCheckout() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Please login to checkout');
+                window.location.href = '/login';
+                return;
+            }
+            window.location.href = '/checkout';
+        }
+
+        function loadCart() {
+            cart.displayCart();
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            auth.checkAuth();
+            loadCart();
+        });
+    </script>
+</body>
+</html>
+
